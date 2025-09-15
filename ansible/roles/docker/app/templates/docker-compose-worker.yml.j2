@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  worker:
+    build: .
+    command: ["/app/worker"]
+    environment:
+      - NATS_URL={{ nats_url }}
+      - STREAM_NAME={{ stream_name }}
+      - WORKER_TYPE={{ worker_type }}
+      - CONSUMER_NAME={{ consumer_name }}
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    command: ["/app/api"]
+    environment:
+      - NATS_URL={{ nats_url }}
+      - HTTP_ADDR={{ http_addr }}
+      - STREAM_NAME={{ stream_name }}
+      - STREAM_SUBJECTS={{ stream_subjects }}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

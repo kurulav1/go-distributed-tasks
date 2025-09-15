@@ -1,0 +1,32 @@
+- hosts: all
+  become: true
+  roles:
+    - docker
+
+- hosts: nats
+  become: true
+  roles:
+    - role: app
+      vars:
+        service_role: nats
+
+- hosts: api
+  become: true
+  roles:
+    - role: app
+      vars:
+        service_role: api
+
+- hosts: worker
+  become: true
+  roles:
+    - role: app
+      vars:
+        service_role: worker
+
+- hosts: ui
+  become: true
+  roles:
+    - role: app
+      vars:
+        service_role: ui

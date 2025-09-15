@@ -1,0 +1,38 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/example/distrib-jobs/internal/broker"
+	"github.com/example/distrib-jobs/internal/httpapi"
+)
+
+func main() {
+	natsURL := getenv("NATS_URL", "nats://127.0.0.1:4222")
+	stream := getenv("STREAM_NAME", "JOBS")
+	subjects := getenv("STREAM_SUBJECTS", "jobs.*")
+	addr := getenv("HTTP_ADDR", ":8080")
+
+	js, err := broker.Connect(natsURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := broker.EnsureStream(js, stream, []string{subjects}); err != nil {
+		log.Fatal(err)
+	}
+
+	h := httpapi.NewHandler(js, stream)
+	srv := &http.Server{Addr: addr, Handler: h}
+	log.Printf("api listening on %s", addr)
+	log.Fatal(srv.ListenAndServe())
+}
+
+func getenv(k, d string) string {
+	v := os.Getenv(k)
+	if v == "" {
+		return d
+	}
+	return v
+}

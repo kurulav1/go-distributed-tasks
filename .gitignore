@@ -1,0 +1,46 @@
+# Go build
+/bin/
+/out/
+/dist/
+/build/
+/*.exe
+/*.exe~
+/*.dll
+/*.so
+/*.dylib
+*.test
+*.out
+
+# Go modules cache
+vendor/
+*.sum
+
+# Logs
+*.log
+*.tmp
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Node / UI
+ui/node_modules/
+ui/.vite/
+ui/dist/
+ui/.cache/
+ui/*.log
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# Docker
+*.pid
+*.tar
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db

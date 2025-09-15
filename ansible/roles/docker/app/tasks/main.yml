@@ -1,0 +1,49 @@
+- name: create deploy dir
+  file:
+    path: "{{ app_deploy_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: sync project
+  synchronize:
+    src: "{{ app_src_dir }}/"
+    dest: "{{ app_deploy_dir }}/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=ansible"
+  delegate_to: localhost
+
+- name: compose file for nats
+  template:
+    src: docker-compose.nats.yml.j2
+    dest: "{{ app_deploy_dir }}/docker-compose.yml"
+  when: service_role == "nats"
+
+- name: compose file for api
+  template:
+    src: docker-compose.api.yml.j2
+    dest: "{{ app_deploy_dir }}/docker-compose.yml"
+  when: service_role == "api"
+
+- name: compose file for worker
+  template:
+    src: docker-compose.worker.yml.j2
+    dest: "{{ app_deploy_dir }}/docker-compose.yml"
+  when: service_role == "worker"
+
+- name: build images
+  shell: docker compose -p {{ compose_project_name }} -f {{ app_deploy_dir }}/docker-compose.yml build
+  args:
+    chdir: "{{ app_deploy_dir }}"
+
+- name: up nats
+  shell: docker compose -p {{ compose_project_name }} -f {{ app_deploy_dir }}/docker-compose.yml up -d --remove-orphans
+  when: service_role != "worker"
+  args:
+    chdir: "{{ app_deploy_dir }}"
+
+- name: up workers
+  shell: docker compose -p {{ compose_project_name }} -f {{ app_deploy_dir }}/docker-compose.yml up -d --remove-orphans --scale worker={{ worker_replicas }}
+  when: service_role == "worker"
+  args:
+    chdir: "{{ app_deploy_dir }}"

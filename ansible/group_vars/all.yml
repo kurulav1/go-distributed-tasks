@@ -1,0 +1,12 @@
+app_src_dir: "{{ playbook_dir }}/.."
+app_deploy_dir: /opt/distrib-jobs
+nats_url: nats://nats1:4222
+stream_name: JOBS
+stream_subjects: jobs.*
+http_addr: :8080
+worker_type: email
+consumer_name: worker-email
+worker_replicas: 2
+compose_project_name: distribjobs
+docker_users: []
+ui_api_base: http://api1:8080
