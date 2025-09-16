@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/example/distrib-jobs/internal/auth"
@@ -15,27 +14,20 @@ import (
 )
 
 type Handler struct {
-	js     nats.JetStreamContext
-	stream string
-	db     *pgxpool.Pool
-	auth   *auth.Service
+	js       nats.JetStreamContext
+	stream   string
+	db       *pgxpool.Pool
+	auth     *auth.Service
 }
 
 type ctxKey string
 
 var userKey ctxKey = "user"
 
-var allowedTypes = map[string]struct{}{
-	"email":   {},
-	"image":   {},
-	"generic": {},
-}
-
 func NewHandler(js nats.JetStreamContext, stream string, dbpool *pgxpool.Pool, a *auth.Service) http.Handler {
 	h := &Handler{js: js, stream: stream, db: dbpool, auth: a}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /jobs", h.requireAuth(h.enqueue))
-	mux.HandleFunc("GET /jobs", h.requireAuth(h.listJobs))
 	mux.HandleFunc("GET /healthz", h.health)
 	mux.HandleFunc("POST /signup", h.signup)
 	mux.HandleFunc("POST /login", h.login)
@@ -99,11 +91,7 @@ func (h *Handler) enqueue(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	if _, ok := allowedTypes[in.Type]; !ok {
-		http.Error(w, "invalid type", http.StatusBadRequest)
-		return
-	}
-	if len(in.Payload) == 0 {
+	if in.Type == "" || len(in.Payload) == 0 {
 		http.Error(w, "invalid job", http.StatusBadRequest)
 		return
 	}
@@ -127,23 +115,6 @@ func (h *Handler) enqueue(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(in)
-}
-
-func (h *Handler) listJobs(w http.ResponseWriter, r *http.Request) {
-	uid, _ := r.Context().Value(userKey).(string)
-	limit := 50
-	if q := r.URL.Query().Get("limit"); q != "" {
-		if v, err := strconv.Atoi(q); err == nil && v > 0 && v <= 500 {
-			limit = v
-		}
-	}
-	items, err := jobs.List(r.Context(), h.db, uid, limit)
-	if err != nil {
-		http.Error(w, "db error", http.StatusServiceUnavailable)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(items)
 }
 
 func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
