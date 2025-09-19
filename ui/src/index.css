@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; margin: 0; }
+.auth, .dash { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+.auth h1, .dash h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+.auth form, .dash form { display: grid; gap: .5rem; }
+.auth input, .dash select, .dash textarea { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .5rem .75rem; }
+.auth button, .dash button { border: none; border-radius: .5rem; padding: .5rem .75rem; background: #111827; color: white; }
+.dash header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #e5e7eb; padding: .5rem; text-align: left; }
+pre { margin: 0; white-space: pre-wrap; word-break: break-word; }

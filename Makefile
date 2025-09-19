@@ -1,11 +1,22 @@
-run:
-	docker compose up --build
+SHELL:=/bin/sh
 
-api:
-	NATS_URL=${NATS_URL} HTTP_ADDR=${HTTP_ADDR} STREAM_NAME=${STREAM_NAME} STREAM_SUBJECTS=${STREAM_SUBJECTS} go run cmd/api/main.go
+up:
+	docker compose up -d nats roach1 roach2 roach3
+	docker compose up -d db-bootstrap
+	docker compose up -d api worker ui
 
-worker:
-	NATS_URL=${NATS_URL} STREAM_NAME=${STREAM_NAME} WORKER_TYPE=${WORKER_TYPE} CONSUMER_NAME=${CONSUMER_NAME} go run cmd/worker/main.go
+down:
+	docker compose down
 
-test:
-	go test ./...
+reset:
+	docker compose down -v --remove-orphans
+	docker network prune -f
+	docker compose up -d nats roach1 roach2 roach3
+	docker compose up -d db-bootstrap
+	docker compose up -d api worker ui
+
+logs:
+	docker compose logs -f
+
+ps:
+	docker compose ps

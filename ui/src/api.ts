@@ -1,56 +1,16 @@
-const base = "/api"
-export async function apiHealth(): Promise<{ ok: boolean; text: string }> {
-  try {
-    const r = await fetch(base + "/healthz")
-    const t = await r.text()
-    return { ok: r.ok, text: t }
-  } catch (e) {
-    return { ok: false, text: "unreachable" }
-  }
-}
-export type EnqueueRequest = { type: string; payload: unknown }
-export async function enqueueJob(token: string, body: EnqueueRequest): Promise<{ status: number; text: string }> {
-  const r = await fetch(base + "/jobs", {
-    method: "POST",
-    headers: { "content-type": "application/json", "authorization": "Bearer " + token },
-    body: JSON.stringify(body)
+type FetchOpts = { method?: string; body?: any; token?: string | null }
+const base = (window as any).__CONFIG__?.API_BASE || import.meta.env.VITE_API_BASE || "http://localhost:8080"
+
+export async function api(path: string, opts: FetchOpts = {}) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (opts.token) headers.Authorization = `Bearer ${opts.token}`
+  const res = await fetch(`${base}${path}`, {
+    method: opts.method || "GET",
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
   })
-  const t = await r.text()
-  return { status: r.status, text: t }
-}
-export async function signup(email: string, password: string): Promise<{ ok: boolean; text: string }> {
-  const r = await fetch(base + "/signup", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-  const t = await r.text()
-  return { ok: r.ok, text: t }
-}
-export async function login(email: string, password: string): Promise<{ ok: boolean; token?: string; text: string }> {
-  const r = await fetch(base + "/login", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-  const t = await r.text()
-  try {
-    const j = JSON.parse(t)
-    return { ok: r.ok, token: j.token, text: t }
-  } catch {
-    return { ok: r.ok, text: t }
-  }
-}
-export type Job = { id: string; user_id: string; type: string; payload: unknown; enqueued_at: string }
-export async function listJobs(token: string, limit = 50): Promise<{ ok: boolean; jobs: Job[]; text: string }> {
-  const r = await fetch(base + "/jobs?limit=" + limit, {
-    headers: { "authorization": "Bearer " + token }
-  })
-  const t = await r.text()
-  try {
-    const j = JSON.parse(t)
-    return { ok: r.ok, jobs: j as Job[], text: t }
-  } catch {
-    return { ok: r.ok, jobs: [], text: t }
-  }
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : {}
+  if (!res.ok) throw new Error((data as any)?.error || res.statusText)
+  return data ?? {}
 }

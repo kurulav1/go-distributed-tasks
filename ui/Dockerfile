@@ -1,15 +1,15 @@
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN if [ -f package-lock.json ]; then npm ci; elif [ -f pnpm-lock.yaml ]; then npm i -g pnpm && pnpm i --frozen-lockfile; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm i; fi
+COPY package*.json ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm i; fi
 COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
-ENV API_BASE=http://api:8080
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
+COPY --from=build /app/dist ./
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 80
+ENV API_BASE=http://api:8080
 ENTRYPOINT ["/entrypoint.sh"]

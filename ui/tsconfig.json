@@ -8,9 +8,10 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true
+    "noEmit": true,
+    "strict": true,
+    "types": []
   },
   "include": ["src"]
 }
